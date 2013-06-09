@@ -2,6 +2,7 @@ import logging
 import os
 import subprocess
 import time
+from astropy.utils.console import ProgressBar
 
 
 __author__ = 'Daniel Lindsley'
@@ -49,6 +50,15 @@ class Pool(object):
         self.callback = None
         self.debug = debug
         self.wait_time = wait_time
+        self.progressbar = None
+
+    def init_progressbar(self):
+        """
+        Initialise the progress bar.
+
+        This only happens if run command is called with ``progressbar=True``.
+        """
+        self.progressbar = ProgressBar(self.command_count())
 
     def prepare_commands(self, commands):
         """
@@ -155,7 +165,7 @@ class Pool(object):
         """
         time.sleep(self.wait_time)
 
-    def run(self, commands=None, callback=None):
+    def run(self, commands=None, callback=None, progressbar=False):
         """
         The method to actually execute all the commands with the pool.
 
@@ -167,6 +177,9 @@ class Pool(object):
 
         if callback is not None:
             self.set_callback(callback)
+
+        if progressbar is True:
+            self.init_progressbar()
 
         keep_running = True
 
@@ -190,8 +203,13 @@ class Pool(object):
                 if self.pool[pid].poll() >= 0:
                     if self.callback:
                         self.callback(self.pool[pid])
-
+                    if progressbar:
+                        self.progressbar.update()
                     self.remove_from_pool(pid)
 
             keep_running = self.command_count() or len(self.pool) > 0
             self.busy_wait()
+
+        if progressbar:
+            self.progressbar.__exit__(None, None, None)
+

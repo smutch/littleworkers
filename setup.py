@@ -11,6 +11,7 @@ setup(
     long_description=open('README.rst', 'r').read(),
     url='https://github.com/toastdriven/littleworkers',
     py_modules = ['littleworkers'],
+    requires = ['astropy'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
